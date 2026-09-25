@@ -6,24 +6,21 @@ app = Flask(__name__)
 
 @app.route('/api', methods=['GET'])
 def proxy_api():
-  # Get parameters from the incoming request
-  key = request.args.get('key', '')
-  tgid = request.args.get('tgid', '')
+  # Parameters edukkuva, default values-um set cheyyunnu
   types = request.args.get('types', 'telegram')
+  key = request.args.get('key', 'lond')
   spell = request.args.get('spell', '')
 
-  # Construct the original backend API URL
+  # Original render API URL-ilekku request construct cheyyunnu
   backend_url = f'https://rtf-api-server.onrender.com/api?types={types}&key={key}&spell={spell}'
-  if tgid:
-    backend_url += f'&tgid={tgid}'
 
   try:
-    # Fetch data from the original API
     response = requests.get(backend_url)
     data = response.json()
 
-    # Remove original tags, credits, or developer info if present in the JSON response
+    # Response dictionary aanel credits/developer fields remove cheyyuka
     if isinstance(data, dict):
+      # Root level-il ulla fields remove cheyyunnu
       keys_to_remove = [
           'credit',
           'credits',
@@ -33,12 +30,21 @@ def proxy_api():
           'owner',
           'author',
           'created_by',
+          'DM FOR BUY',
       ]
       for k in keys_to_remove:
         if k in data:
           data.pop(k, None)
 
-      # Add your custom developer signature
+      # Result object-inullilum credits/developer undo enn nokki remove cheyyuka
+      if 'result' in data and isinstance(data['result'], dict):
+        for k in keys_to_remove:
+          if k in data['result']:
+            data['result'].pop(k, None)
+        # Result-il developer tag add cheyyunnu
+        data['result']['Developer'] = '@Your_father_786k'
+
+      # Root level-ilum developer add cheyyunnu
       data['developer'] = '@Your_father_786k'
 
     return jsonify(data)
@@ -51,16 +57,13 @@ def proxy_api():
     })
 
 
-# Fallback root route
 @app.route('/', methods=['GET'])
 def home():
-  return jsonify(
-      {
-          'status': 'Online',
-          'developer': '@Your_father_786k',
-          'usage': '/api?key=YOUR_KEY&tgid=USER_ID',
-      }
-  )
+  return jsonify({
+      'status': 'Online',
+      'developer': '@Your_father_786k',
+      'usage': '/api?types=telegram&key=lond&spell=123456789',
+  })
 
 
 if __name__ == '__main__':
